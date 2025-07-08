@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.hlhtstudios.taczcustomdeath.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "taczcustomdeath.refmap.json",
+  "mixins": [
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
+ 
