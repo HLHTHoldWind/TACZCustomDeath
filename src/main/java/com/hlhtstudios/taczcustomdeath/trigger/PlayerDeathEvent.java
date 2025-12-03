@@ -29,6 +29,6 @@ public class PlayerDeathEvent {
             team.setDeathMessageVisibility(Team.Visibility.NEVER); //
         }
 
-        sb.addPlayerToTeam(player.getScoreboardName(), team);
+        //sb.addPlayerToTeam(player.getScoreboardName(), team);
     }
 }

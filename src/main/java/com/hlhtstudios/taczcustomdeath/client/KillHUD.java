@@ -10,11 +10,11 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.scores.Team;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 import com.hlhtstudios.taczcustomdeath.Taczcustomdeath;
+import static com.hlhtstudios.taczcustomdeath.client.KillHUDSettings.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,14 +23,6 @@ import java.util.*;
 public class KillHUD implements IGuiOverlay {
 
     public static KillHUD INSTANCE = new KillHUD();
-
-    private static final int MAX_MESSAGES = 7;
-    private static final int ICON_SIZE = 24;
-    private static final int ICON_SIZE2 = 8;
-    private static final int SPACING_X = 8;
-    private static final int SPACING_Y = 1;
-    private static final int MARGIN_RIGHT = 20;
-    private static final int MARGIN_BOTTOM = 70;
 
     private final Deque<KillMessage> messages = new LinkedList<>();
 
@@ -151,47 +143,96 @@ public class KillHUD implements IGuiOverlay {
         Minecraft mc = Minecraft.getInstance();
         Font font = mc.font;
         messages.removeIf(KillMessage::isExpired);
-        int baseY = screenHeight - MARGIN_BOTTOM;
+        int baseY = screenHeight - MARGIN_VERTICAL;
         int i = 0;
 
         Iterator<KillMessage> it = messages.descendingIterator();
         while (it.hasNext()) {
-            float scale_ratio = 0.75f;
 
             KillMessage msg = it.next();
             int alphaInt = (int)(msg.getAlpha() * 255);
             int attackerColorWithAlpha = (alphaInt << 24) | (msg.attackerColor & 0x00FFFFFF);
             int victimColorWithAlpha = (alphaInt << 24) | (msg.victimColor & 0x00FFFFFF);
             // Calculate widths
-            int attackerWidth =  (int) (font.width(msg.attackerName) * scale_ratio);
-            int victimWidth =  (int) (font.width(msg.victimName) * scale_ratio);
-            int totalWidth = (int) (((SPACING_X + SPACING_X) * scale_ratio) + ICON_SIZE + victimWidth + attackerWidth);
+            int attackerWidth =  (int) (font.width(msg.attackerName) * TEXT_SCALE);
+            int victimWidth =  (int) (font.width(msg.victimName) * TEXT_SCALE);
+            int totalWidth = (int) (((SPACING_X + SPACING_X) * TEXT_SCALE) + ICON_SIZE + victimWidth + attackerWidth);
 
-            int xDelta = (int) (attackerWidth - attackerWidth*scale_ratio);
-            int yDelta = (int) ((font.lineHeight - font.lineHeight*scale_ratio) / 2);
+            int xDelta = (int) (attackerWidth - attackerWidth * TEXT_SCALE);
+            int yDelta = (int) ((font.lineHeight - font.lineHeight * TEXT_SCALE) / 2);
 
-            int posX = (int) (((screenWidth - MARGIN_RIGHT - totalWidth) / scale_ratio ));
-            int posX2 = (int) ((screenWidth - MARGIN_RIGHT - totalWidth));
-            int posY = (int) ((baseY - i * (ICON_SIZE2 + SPACING_Y)) / scale_ratio + yDelta);
-            int posY2 = (baseY - i * (ICON_SIZE2 + SPACING_Y));
+// Compute scaled reverse deltas
+            int scaledTotalWidth = (int) (totalWidth / TEXT_SCALE);
+            int scaledXOffset = (int) (xDelta / TEXT_SCALE);
+            int scaledYDelta = (int) (yDelta / TEXT_SCALE);
+
+// Starting X & Y (will be overridden depending on padding)
+            int posX, posX2, posY, posY2;
+
+// Auto positioning based on padding
+            int entryHeight = ICON_SIZE2 + SPACING_Y;
+
+            switch (PADDING) {
+
+                case TOP_LEFT:
+                    // X stays on the left
+                    posX  = (int) (MARGIN_HORIZONTAL / TEXT_SCALE);
+                    posX2 = MARGIN_HORIZONTAL;
+
+                    // Y starts at top: margin + index*entryHeight
+                    posY2 = MARGIN_VERTICAL + (i * entryHeight);
+                    posY  = (int) ((posY2 / TEXT_SCALE) + yDelta);
+                    break;
+
+
+                case TOP_RIGHT:
+                    // X stays on the right
+                    posX  = (int) ((screenWidth - MARGIN_HORIZONTAL - totalWidth) / TEXT_SCALE);
+                    posX2 = screenWidth - MARGIN_HORIZONTAL - totalWidth;
+
+                    // Y same as LEFT_TOP
+                    posY2 = MARGIN_VERTICAL + (i * entryHeight);
+                    posY  = (int) ((posY2 / TEXT_SCALE) + yDelta);
+                    break;
+
+
+                case BOTTOM_LEFT:
+                    // X on left
+                    posX  = (int) (MARGIN_HORIZONTAL / TEXT_SCALE);
+                    posX2 = MARGIN_HORIZONTAL;
+
+                    // Y starts from bottom: screenHeight - margin - index*entryHeight
+                    posY2 = screenHeight - MARGIN_VERTICAL - (i * entryHeight);
+                    posY  = (int) ((posY2 / TEXT_SCALE) + yDelta);
+                    break;
+
+
+                default: // RIGHT_BOTTOM
+                    posX  = (int) ((screenWidth - MARGIN_HORIZONTAL - totalWidth) / TEXT_SCALE);
+                    posX2 = screenWidth - MARGIN_HORIZONTAL - totalWidth;
+
+                    posY2 = screenHeight - MARGIN_VERTICAL - (i * entryHeight);
+                    posY  = (int) ((posY2 / TEXT_SCALE) + yDelta);
+                    break;
+            }
 
             PoseStack pose = guiGraphics.pose();
             pose.pushPose();
             // pose.translate(screenWidth - screenWidth / 0.75f, posY / 0.75f, 0);
-            pose.scale(scale_ratio, scale_ratio, 1.0f);
+            pose.scale(TEXT_SCALE, TEXT_SCALE, 1.0f);
             // Draw attacker name
             guiGraphics.drawString(font, msg.attackerName, posX, posY + (ICON_SIZE2 - font.lineHeight) / 2, attackerColorWithAlpha, false);
             pose.popPose();
             // Draw weapon image
-            int iconX = (int) (posX2 + attackerWidth + SPACING_X*scale_ratio);;
+            int iconX = (int) (posX2 + attackerWidth + SPACING_X*TEXT_SCALE);;
 
             drawFlippedIcon(msg.weaponIcon, iconX, posY2-1, ICON_SIZE, ICON_SIZE2, msg.getAlpha());
 
             // Draw victim name
             pose.pushPose();
             //pose.translate(posX / 0.75f, posY / 0.75f, 0);
-            pose.scale(scale_ratio, scale_ratio, 1.0f);
-            int victimX = (int) (((iconX + ICON_SIZE) / scale_ratio + SPACING_X));
+            pose.scale(TEXT_SCALE, TEXT_SCALE, 1.0f);
+            int victimX = (int) (((iconX + ICON_SIZE) / TEXT_SCALE + SPACING_X));
             guiGraphics.drawString(font, msg.victimName, victimX, posY + (ICON_SIZE2 - font.lineHeight) / 2, victimColorWithAlpha, false);
             pose.popPose();
             i++;
@@ -217,13 +258,13 @@ public class KillHUD implements IGuiOverlay {
 
         public float getAlpha() {
             long age = System.currentTimeMillis() - timestamp;
-            if (age >= 6000) return 0.1f;
-            if (age >= 5100) return 1.0f - ((age - 5100f) / 1000f); // Fade out in last 1s
+            if (age >= MESSAGE_LIFETIME) return 0.1f;
+            if (age >= FADE_START) return 1.0f - ((age - FADE_START) / 1000f); // Fade out in last 1s
             return 1f;
         }
 
         public boolean isExpired() {
-            return System.currentTimeMillis() - timestamp > 6000;
+            return System.currentTimeMillis() - timestamp > MESSAGE_LIFETIME;
         }
     }
 }

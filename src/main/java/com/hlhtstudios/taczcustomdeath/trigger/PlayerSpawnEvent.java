@@ -23,7 +23,7 @@ public class PlayerSpawnEvent {
                 team.setDeathMessageVisibility(Team.Visibility.NEVER); //
             }
 
-            sb.removePlayerFromTeam(player.getScoreboardName(), team); // Re-enable death messages for next deaths
+            //sb.removePlayerFromTeam(player.getScoreboardName(), team); // Re-enable death messages for next deaths
         }
     }
 }
