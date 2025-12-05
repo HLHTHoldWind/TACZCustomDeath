@@ -11,7 +11,14 @@ public class Config {
         TOP_LEFT,
         TOP_RIGHT,
         BOTTOM_LEFT,
-        BOTTOM_RIGHT; // default
+        BOTTOM_RIGHT // default
+    }
+
+    public enum DisplayMode {
+        PLAYERS,
+        ALL,
+        PLAYERS_GUN,
+        ALL_GUN
     }
 
     private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
@@ -26,27 +33,27 @@ public class Config {
             .defineInRange("maxMessages", 7, 1, 50);
 
     private static final ForgeConfigSpec.IntValue ICON_SIZE = BUILDER
-            .comment("Weapon icon height (in pixels)")
+            .comment("Weapon icon height (in pixels) (This shouldn't be changed to prevent visual issues)")
             .defineInRange("iconSize", 32, 1, 128);
 
     private static final ForgeConfigSpec.IntValue ICON_SIZE_SMALL = BUILDER
-            .comment("Weapon icon width (in pixels)")
+            .comment("Weapon icon width (in pixels) (This shouldn't be changed to prevent visual issues)")
             .defineInRange("iconSizeSmall", 11, 1, 128);
 
     private static final ForgeConfigSpec.IntValue SPACING_X = BUILDER
-            .comment("Horizontal spacing between HUD elements")
+            .comment("Horizontal spacing between HUD elements (This shouldn't be changed to prevent visual issues)")
             .defineInRange("spacingX", 8, 0, 50);
 
     private static final ForgeConfigSpec.IntValue SPACING_Y = BUILDER
-            .comment("Vertical spacing between HUD lines")
+            .comment("Vertical spacing between HUD lines (This shouldn't be changed to prevent visual issues)")
             .defineInRange("spacingY", 1, 0, 20);
 
     private static final ForgeConfigSpec.IntValue MARGIN_HORIZONTAL = BUILDER
-            .comment("Horizontal margin of the HUD")
+            .comment("Horizontal margin of the HUD (How message box close to the horizontal edge of the screen), 20 as default")
             .defineInRange("marginHorizontal", 20, 0, 500);
 
     private static final ForgeConfigSpec.IntValue MARGIN_VERTICAL = BUILDER
-            .comment("Vertical margin of the HUD")
+            .comment("Vertical margin of the HUD, it should be changed into similar value as marginHorizontal when display padding on the top side, 70 as default with BOTTOM_RIGHT")
             .defineInRange("marginVertical", 70, 0, 500);
 
     private static final ForgeConfigSpec.DoubleValue TEXT_SCALE = BUILDER
@@ -58,12 +65,20 @@ public class Config {
             .defineInRange("messageLifetime", 6000, 100, 60000);
 
     private static final ForgeConfigSpec.IntValue FADE_START = BUILDER
-            .comment("When fade-out begins (ms)")
+            .comment("When kill message starts to fading-out (ms)")
             .defineInRange("fadeStart", 5100, 0, 60000);
+
+    private static final ForgeConfigSpec.BooleanValue BACKGROUND = BUILDER
+            .comment("Messages have transparent background or not (true/false)")
+            .define("background", true);
 
     public static final ForgeConfigSpec.ConfigValue<String> PADDING_CFG =
             BUILDER.comment("Padding position: TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT")
                     .define("paddingPosition", "TOP_RIGHT");
+
+    public static final ForgeConfigSpec.ConfigValue<String> DISPLAY_MODE =
+            BUILDER.comment("Display Filter: PLAYERS, ALL, PLAYERS_GUN, ALL_GUN (Warning: This should be changed on serverside)")
+                    .define("displayMode", "PLAYERS_GUN");
 
 
     //
@@ -87,7 +102,9 @@ public class Config {
     public static float globalScale;
     public static int messageLifetime;
     public static int fadeStart;
+    public static boolean background;
     public static PaddingPosition padding;
+    public static DisplayMode displayMode;
 
 
     @SubscribeEvent
@@ -102,7 +119,13 @@ public class Config {
         marginVertical = MARGIN_VERTICAL .get();
         globalScale = TEXT_SCALE.get().floatValue();
         messageLifetime = MESSAGE_LIFETIME.get();
+        background = BACKGROUND.get();
         fadeStart = FADE_START.get();
+        try {
+            displayMode = DisplayMode.valueOf(DISPLAY_MODE.get().toUpperCase());
+        } catch (Exception e) {
+            displayMode = DisplayMode.PLAYERS_GUN; // fallback
+        }
         try {
             padding = PaddingPosition.valueOf(PADDING_CFG.get().toUpperCase());
         } catch (Exception e) {

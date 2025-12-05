@@ -13,6 +13,8 @@ import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 import com.hlhtstudios.taczcustomdeath.network.NetworkHandler;
 
+import static com.hlhtstudios.taczcustomdeath.client.KillHUDSettings.*;
+
 
 @Mod.EventBusSubscriber(modid = "taczcustomdeath")
 public class KillHandler {
@@ -36,19 +38,31 @@ public class KillHandler {
 
         int attackerType = 0;
         int victimType = 0;
-        if (!(attacker instanceof Player) || !(victim instanceof Player)) return;
+        switch (DISPLAY_MODE) {
+            case PLAYERS:
+                if (!(attacker instanceof Player) || !(victim instanceof Player)) return;
+            case PLAYERS_GUN:
+                if (!(attacker instanceof Player) || !(victim instanceof Player)) return;
+
+        }
+
 
         boolean isSelf = attacker.getUUID().equals(victim.getUUID());
         boolean isTeammate = attacker.isAlliedTo(victim);
         String attackerTeam;
         String victimTeam;
-        if (attacker.getTeam() == null){
+        if (!(attacker instanceof Player)){
+            attackerTeam = "MobTeam";
+        } else if (attacker.getTeam() == null){
             attackerTeam = "";
         }
         else{
             attackerTeam = attacker.getTeam().getName();
         }
-        if (victim.getTeam() == null){
+
+        if (!(victim instanceof Player)) {
+            victimTeam = "MobTeam";
+        } else if (victim.getTeam() == null){
             victimTeam = "";
         }
         else{

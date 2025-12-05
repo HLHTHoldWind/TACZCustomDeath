@@ -14,7 +14,9 @@ public class KillHUDSettings {
     public static float TEXT_SCALE = Config.globalScale;
     public static int MESSAGE_LIFETIME = Config.messageLifetime;
     public static int FADE_START = Config.fadeStart;
+    public static boolean HAS_BACKGROUND = Config.background;
     public static Config.PaddingPosition PADDING = Config.padding;
+    public static Config.DisplayMode DISPLAY_MODE = Config.displayMode;
 
     private KillHUDSettings() {}
 }

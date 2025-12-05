@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.util.*;
 
 public class KillHUD implements IGuiOverlay {
+    public static final int YELLOW = 0xFFFFBF00;
 
     public static KillHUD INSTANCE = new KillHUD();
 
@@ -43,8 +44,9 @@ public class KillHUD implements IGuiOverlay {
             return;
         }
 
-        int attackerColor = 0xb33c36; // default red
-        int victimColor = 0xb33c36;
+        int attackerColor = 0xE45A50; // default red
+        int victimColor = 0xE45A50;
+        boolean includeSelf = false;
 
         Taczcustomdeath.LOGGER.info("{}{}", attacker.toString(), mc.player.getUUID().toString());
         Taczcustomdeath.LOGGER.info(String.valueOf((Objects.equals(attacker.toString(), mc.player.getUUID().toString()))));
@@ -63,14 +65,24 @@ public class KillHUD implements IGuiOverlay {
             }}
 
         if ((Objects.equals(attacker.toString(), mc.player.getUUID().toString()))) {
-            attackerColor = 0xffbf00; // yellow
+            attackerColor = YELLOW; // yellow
+            includeSelf = true;
         }
 
         if ((Objects.equals(victim.toString(), mc.player.getUUID().toString()))) {
-            victimColor = 0xffbf00; // yellow
+            victimColor = YELLOW; // yellow
+            includeSelf = true;
         }
 
-        messages.addLast(new KillMessage(attackerName, attackerColor, victimName, victimColor, weaponIcon));
+        if ((Objects.equals(attackerTeam, "MobTeam"))) {
+            attackerColor = 0xcdcdcd;
+        }
+
+        if ((Objects.equals(victimTeam, "MobTeam"))) {
+            victimColor = 0xcdcdcd;
+        }
+
+        messages.addLast(new KillMessage(attackerName, attackerColor, victimName, victimColor, weaponIcon, includeSelf));
 
         if (messages.size() > MAX_MESSAGES) {
             messages.removeFirst();
@@ -170,7 +182,7 @@ public class KillHUD implements IGuiOverlay {
             int posX, posX2, posY, posY2;
 
 // Auto positioning based on padding
-            int entryHeight = ICON_SIZE2 + SPACING_Y;
+            int entryHeight = (int) (ICON_SIZE2 + SPACING_Y  + 2);
 
             switch (PADDING) {
 
@@ -215,7 +227,30 @@ public class KillHUD implements IGuiOverlay {
                     posY  = (int) ((posY2 / TEXT_SCALE) + yDelta);
                     break;
             }
-
+            int bgAlpha = (int)(msg.getAlpha() * 150); // tweak 150 → 255 depending on opacity
+            int bgColor = (bgAlpha << 24) | 0x2B2B2B;
+            int frameY = (int)(posY2 - TEXT_SCALE - TEXT_SCALE);
+            int frameX = (int)(posX2 - 8*TEXT_SCALE);
+            int frameW = (int)(posX2 + totalWidth + 7*TEXT_SCALE);
+            int frameH = (int)(posY2 - TEXT_SCALE + ICON_SIZE2 + TEXT_SCALE);
+            int borderWidth = 1;
+            int bdAlpha = (int)(msg.getAlpha() * 255); // tweak 150 → 255 depending on opacity
+            int bdColor = (bdAlpha << 24) | 0xe0e0e0;
+            if (HAS_BACKGROUND){
+                guiGraphics.fill(
+                        frameX,                // left
+                        frameY,                // top
+                        frameW,   // right
+                        frameH,   // bottom (or entryHeight)
+                        bgColor
+                );
+                if (msg.includeSelf){
+                    guiGraphics.fill(frameX - borderWidth, frameY - borderWidth, frameW + borderWidth, frameY, bdColor);
+                    guiGraphics.fill(frameX - borderWidth, frameH, frameW + borderWidth, frameH + borderWidth, bdColor);
+                    guiGraphics.fill(frameX - borderWidth, frameY, frameX, frameH, bdColor);
+                    guiGraphics.fill(frameW, frameY, frameW + borderWidth, frameH, bdColor);
+                }
+                }
             PoseStack pose = guiGraphics.pose();
             pose.pushPose();
             // pose.translate(screenWidth - screenWidth / 0.75f, posY / 0.75f, 0);
@@ -246,14 +281,16 @@ public class KillHUD implements IGuiOverlay {
         public final int victimColor;
         public final ResourceLocation weaponIcon;
         public final long timestamp;
+        public final boolean includeSelf;
 
-        public KillMessage(String attackerName, int attackerColor, String victimName, int victimColor, ResourceLocation weaponIcon) {
+        public KillMessage(String attackerName, int attackerColor, String victimName, int victimColor, ResourceLocation weaponIcon, boolean includeSelf) {
             this.attackerName = attackerName;
             this.attackerColor = attackerColor;
             this.victimName = victimName;
             this.victimColor = victimColor;
             this.weaponIcon = weaponIcon;
             this.timestamp = System.currentTimeMillis();
+            this.includeSelf = includeSelf;
         }
 
         public float getAlpha() {
