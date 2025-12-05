@@ -34,8 +34,6 @@ public class KillHUD implements IGuiOverlay {
             Taczcustomdeath.LOGGER.error("KillHUD.INSTANCE is null!");
         }
         Taczcustomdeath.LOGGER.info("Try pushing kill");
-//        Taczcustomdeath.LOGGER.info(attacker.toString());
-//        Taczcustomdeath.LOGGER.info(victim.toString());
         if (attacker == null || victim == null || weaponIcon == null) return;
 
         Minecraft mc = Minecraft.getInstance();

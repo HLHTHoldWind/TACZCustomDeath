@@ -69,8 +69,6 @@ public class KillHandler {
             victimTeam = victim.getTeam().getName();
         }
 
-
-
         for (Player player : attacker.level().players()) {
             if (player instanceof ServerPlayer serverPlayer) {
                 NetworkHandler.CHANNEL.send(

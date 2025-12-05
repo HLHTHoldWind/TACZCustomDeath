@@ -3,7 +3,6 @@ package com.hlhtstudios.taczcustomdeath.client;
 import com.hlhtstudios.taczcustomdeath.Config;
 
 public class KillHUDSettings {
-
     public static int MAX_MESSAGES = Config.maxMessages;
     public static int ICON_SIZE = (int) (Config.iconSize * Config.globalScale);
     public static int ICON_SIZE2 = (int) (Config.iconSizeSmall * Config.globalScale);
